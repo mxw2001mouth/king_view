@@ -1,0 +1,10 @@
+Pillow>=10.0.0
+PyQt5>=5.15.0
+rawpy>=0.18.0
+exifread>=3.0.0
+psutil>=5.9.0
+numpy>=1.24.0
+pyinstaller>=5.0.0
+send2trash>=1.8.0
+opencv-python>=4.12.0
+imageio>=2.37.0
