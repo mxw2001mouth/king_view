@@ -844,7 +844,6 @@ class OptimizedWaterfallWidget(QWidget):
     def set_images(self, image_files: List[str]):
         """设置图片列表"""
         self.clear_thumbnails()
-        self._reset_scroll_position()
         
         self.image_files = image_files
         self.loaded_count = 0

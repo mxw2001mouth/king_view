@@ -495,22 +495,28 @@ class MainWindowPerformance(QMainWindow):
             return
         
         try:
-            # 重置到初始状态
+            # 1. 清空现有内容
+            self.waterfall_widget.clear_thumbnails()
+
+            # 2. 强制Qt处理事件，更新UI（特别是滚动区域的大小）
+            QApplication.processEvents()
+
+            # 3. 在UI更新后，将滚动条重置到顶部
+            if hasattr(self, 'scroll_area'):
+                self.scroll_area.verticalScrollBar().setValue(0)
+
+            # 4. 准备新数据
             self.loaded_images = 0
-            
-            # The layout reset is now handled inside waterfall_widget.set_images()
-            
             if sort_type == 'name':
                 self.image_files.sort(key=lambda x: os.path.basename(x).lower())
             elif sort_type == 'date':
                 self.image_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
             elif sort_type == 'size':
                 self.image_files.sort(key=lambda x: os.path.getsize(x), reverse=True)
-            
-            # 保存当前排序方式
+
             self.config_manager.set('current_sort', sort_type)
-            
-            # 重新加载瀑布流
+
+            # 5. 加载新内容
             if hasattr(self, 'waterfall_widget'):
                 self.waterfall_widget.set_images(self.image_files)
                 
@@ -581,12 +587,6 @@ class MainWindowPerformance(QMainWindow):
         open_action.setStatusTip('选择图片文件夹 (Ctrl+O)')
         open_action.triggered.connect(self.open_directory)
         toolbar.addAction(open_action)
-        
-        refresh_action = QAction('刷新', self)
-        refresh_action.setShortcut('F5')
-        refresh_action.setStatusTip('重新扫描文件夹 (F5)')
-        refresh_action.triggered.connect(self.refresh_images)
-        toolbar.addAction(refresh_action)
         
         toolbar.addSeparator()
         
@@ -880,31 +880,18 @@ class MainWindowPerformance(QMainWindow):
         msg_box.exec_()
         
     def reset_to_initial_state(self):
-        """重置到初始状态"""
+        """重置UI到初始状态，清空图片并滚动到顶部"""
         self.loaded_images = 0
         
-        # 强制重置布局
-        if hasattr(self, 'waterfall_widget') and hasattr(self.waterfall_widget, 'layout'):
-            self.waterfall_widget.layout.invalidate()
-            self.waterfall_widget.layout._layout_dirty = True
-            if hasattr(self.waterfall_widget.layout, '_cached_layout_height'):
-                self.waterfall_widget.layout._cached_layout_height = 0
-            if hasattr(self.waterfall_widget.layout, '_cached_layout_width'):
-                self.waterfall_widget.layout._cached_layout_width = 0
-            if hasattr(self.waterfall_widget.layout, '_cached_item_positions'):
-                self.waterfall_widget.layout._cached_item_positions.clear()
-            
-            # 更新组件大小
-            if hasattr(self.waterfall_widget, 'update_widget_size'):
-                self.waterfall_widget.update_widget_size()
-        
-        # 强制滚动到顶部
-        if hasattr(self, 'scroll_area') and self.scroll_area:
+        if hasattr(self, 'waterfall_widget'):
+            self.waterfall_widget.clear_thumbnails()
+
+        # 强制处理UI事件以更新布局
+        QApplication.processEvents()
+
+        # 重置滚动条
+        if hasattr(self, 'scroll_area'):
             self.scroll_area.verticalScrollBar().setValue(0)
-        
-        # 使用瀑布流组件的滚动重置方法
-        if hasattr(self, 'waterfall_widget') and hasattr(self.waterfall_widget, '_force_scroll_to_top'):
-            self.waterfall_widget._force_scroll_to_top()
     
     def auto_load_last_directory(self):
         """自动加载上次打开的文件夹"""
@@ -973,7 +960,7 @@ class MainWindowPerformance(QMainWindow):
         # 切换到图片浏览界面
         self.content_stack.setCurrentIndex(1)
         
-        # The layout reset is now handled inside waterfall_widget.set_images()
+        # 布局和滚动重置由调用方（如 open_directory）在使用 reset_to_initial_state 时处理
         
         # 应用保存的视图模式
         if hasattr(self, 'waterfall_widget'):
@@ -984,20 +971,6 @@ class MainWindowPerformance(QMainWindow):
         # 更新瀑布流
         self.waterfall_widget.set_images(self.image_files)
     
-    def refresh_images(self):
-        """刷新图片"""
-        # 重置到初始状态
-        self.loaded_images = 0
-        
-        if self.current_directory:
-            # The layout reset is now handled inside waterfall_widget.set_images()
-            self.load_images()
-        else:
-            # 如果没有当前目录，尝试加载上次打开的文件夹
-            last_dir = self.config_manager.get('last_directory', '')
-            if last_dir and os.path.exists(last_dir):
-                self.current_directory = last_dir
-                self.load_images()
     
     def on_scroll(self, value):
         """滚动事件处理"""
@@ -1092,9 +1065,7 @@ class MainWindowPerformance(QMainWindow):
     
     def keyPressEvent(self, event):
         """键盘事件"""
-        if event.key() == Qt.Key_F5:
-            self.refresh_images()
-        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O:
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_O:
             self.open_directory()
         else:
             super().keyPressEvent(event)
