@@ -532,15 +532,6 @@ class OptimizedWaterfallLayout(QLayout):
         self._cached_layout_height = 0    # 缓存布局高度
         self._layout_dirty = True         # 布局是否需要重新计算
     
-    def reset(self):
-        """完全重置布局状态和缓存"""
-        self._cached_item_positions.clear()
-        self._cached_item_heights.clear()
-        self._cached_layout_width = 0
-        self._cached_layout_height = 0
-        self._layout_dirty = True
-        self.invalidate()
-
     def addItem(self, item):
         """添加项目"""
         self.items.append(item)
@@ -1190,9 +1181,6 @@ class OptimizedWaterfallWidget(QWidget):
     
     def clear_thumbnails(self):
         """清除所有缩略图"""
-        if self.layout:
-            self.layout.reset()
-
         self.loading_timer.stop()
         
         # 性能优化点16：回收而不是销毁缩略图
