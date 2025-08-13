@@ -498,25 +498,7 @@ class MainWindowPerformance(QMainWindow):
             # 重置到初始状态
             self.loaded_images = 0
             
-            # 强制重置布局
-            if hasattr(self, 'waterfall_widget') and hasattr(self.waterfall_widget, 'layout'):
-                self.waterfall_widget.layout.invalidate()
-                self.waterfall_widget.layout._layout_dirty = True
-                if hasattr(self.waterfall_widget.layout, '_cached_layout_height'):
-                    self.waterfall_widget.layout._cached_layout_height = 0
-                if hasattr(self.waterfall_widget.layout, '_cached_layout_width'):
-                    self.waterfall_widget.layout._cached_layout_width = 0
-                if hasattr(self.waterfall_widget.layout, '_cached_item_positions'):
-                    self.waterfall_widget.layout._cached_item_positions.clear()
-            
-            # 强制滚动到顶部 - 第一次尝试
-            if hasattr(self, 'scroll_area') and self.scroll_area:
-                self.scroll_area.verticalScrollBar().setValue(0)
-                QApplication.processEvents()
-            
-            # 使用瀑布流组件的滚动重置方法 - 第一次尝试
-            if hasattr(self, 'waterfall_widget') and hasattr(self.waterfall_widget, '_force_scroll_to_top'):
-                self.waterfall_widget._force_scroll_to_top()
+            # The layout reset is now handled inside waterfall_widget.set_images()
             
             if sort_type == 'name':
                 self.image_files.sort(key=lambda x: os.path.basename(x).lower())
@@ -528,28 +510,9 @@ class MainWindowPerformance(QMainWindow):
             # 保存当前排序方式
             self.config_manager.set('current_sort', sort_type)
             
-            # 再次尝试滚动到顶部，确保图片从顶部开始加载
-            if hasattr(self, 'scroll_area') and self.scroll_area:
-                self.scroll_area.verticalScrollBar().setValue(0)
-                QApplication.processEvents()
-                # 使用定时器延迟执行，确保在UI更新后再次重置
-                QTimer.singleShot(0, lambda: self.scroll_area.verticalScrollBar().setValue(0))
-                QTimer.singleShot(50, lambda: self.scroll_area.verticalScrollBar().setValue(0))
-                QTimer.singleShot(150, lambda: self.scroll_area.verticalScrollBar().setValue(0))
-            
             # 重新加载瀑布流
             if hasattr(self, 'waterfall_widget'):
-                # 设置图片前先确保滚动到顶部
-                if hasattr(self.waterfall_widget, '_force_scroll_to_top'):
-                    self.waterfall_widget._force_scroll_to_top()
-                
                 self.waterfall_widget.set_images(self.image_files)
-                
-                # 设置图片后再次确保滚动到顶部 - 增加更多延迟尝试
-                if hasattr(self.waterfall_widget, '_force_scroll_to_top'):
-                    QTimer.singleShot(100, lambda: self.waterfall_widget._force_scroll_to_top())
-                    QTimer.singleShot(200, lambda: self.waterfall_widget._force_scroll_to_top())
-                    QTimer.singleShot(300, lambda: self.waterfall_widget._force_scroll_to_top())
                 
         except Exception as e:
             logging.error(f"排序失败: {e}")
@@ -1010,20 +973,7 @@ class MainWindowPerformance(QMainWindow):
         # 切换到图片浏览界面
         self.content_stack.setCurrentIndex(1)
         
-        # 强制重置布局
-        if hasattr(self, 'waterfall_widget') and hasattr(self.waterfall_widget, 'layout'):
-            self.waterfall_widget.layout.invalidate()
-            self.waterfall_widget.layout._layout_dirty = True
-            if hasattr(self.waterfall_widget.layout, '_cached_layout_height'):
-                self.waterfall_widget.layout._cached_layout_height = 0
-            if hasattr(self.waterfall_widget.layout, '_cached_layout_width'):
-                self.waterfall_widget.layout._cached_layout_width = 0
-            if hasattr(self.waterfall_widget.layout, '_cached_item_positions'):
-                self.waterfall_widget.layout._cached_item_positions.clear()
-        
-        # 确保滚动到顶部
-        if hasattr(self, 'scroll_area') and self.scroll_area:
-            self.scroll_area.verticalScrollBar().setValue(0)
+        # The layout reset is now handled inside waterfall_widget.set_images()
         
         # 应用保存的视图模式
         if hasattr(self, 'waterfall_widget'):
@@ -1033,14 +983,6 @@ class MainWindowPerformance(QMainWindow):
         
         # 更新瀑布流
         self.waterfall_widget.set_images(self.image_files)
-        
-        # 设置图片后再次确保滚动到顶部
-        if hasattr(self, 'scroll_area') and self.scroll_area:
-            self.scroll_area.verticalScrollBar().setValue(0)
-        
-        # 使用瀑布流组件的滚动重置方法
-        if hasattr(self.waterfall_widget, '_force_scroll_to_top'):
-            QTimer.singleShot(150, lambda: self.waterfall_widget._force_scroll_to_top())
     
     def refresh_images(self):
         """刷新图片"""
@@ -1048,25 +990,7 @@ class MainWindowPerformance(QMainWindow):
         self.loaded_images = 0
         
         if self.current_directory:
-            # 强制重置布局
-            if hasattr(self, 'waterfall_widget') and hasattr(self.waterfall_widget, 'layout'):
-                self.waterfall_widget.layout.invalidate()
-                self.waterfall_widget.layout._layout_dirty = True
-                if hasattr(self.waterfall_widget.layout, '_cached_layout_height'):
-                    self.waterfall_widget.layout._cached_layout_height = 0
-                if hasattr(self.waterfall_widget.layout, '_cached_layout_width'):
-                    self.waterfall_widget.layout._cached_layout_width = 0
-                if hasattr(self.waterfall_widget.layout, '_cached_item_positions'):
-                    self.waterfall_widget.layout._cached_item_positions.clear()
-            
-            # 强制滚动到顶部
-            if hasattr(self, 'scroll_area') and self.scroll_area:
-                self.scroll_area.verticalScrollBar().setValue(0)
-            
-            if hasattr(self, 'waterfall_widget') and hasattr(self.waterfall_widget, '_force_scroll_to_top'):
-                self.waterfall_widget._force_scroll_to_top()
-            
-            # 重新加载图片
+            # The layout reset is now handled inside waterfall_widget.set_images()
             self.load_images()
         else:
             # 如果没有当前目录，尝试加载上次打开的文件夹
